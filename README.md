@@ -23,20 +23,20 @@ Then you will obviously need the Arduino and Teensyduino libraries. You can
 find the Arduino library on ``arduino.cc/en/Main/Software`` where you will 
 find your latest version. Unfortunately Arduino does not provide a static URL 
 with the latest version of the library, so this URL might change with 
-time. At the time this was written, the latest version was `1.6.7` so:
+time. At the time this was written, the latest version was `1.8.13` so:
 
 ```bash
-curl -O https://downloads.arduino.cc/arduino-1.6.7-linux64.tar.xz
-tar -xvf arduino-1.6.7-linux64.tar.xz
+curl -O https://downloads.arduino.cc/arduino-1.8.13-linux64.tar.xz
+tar -xvf arduino-1.8.13-linux64.tar.xz
 ```
 
 For Teensyduino, the URL is also not static and will change. At this time you
 can get it with
 
 ```
-curl -O https://www.pjrc.com/teensy/td_127/teensyduino.64bit
-chmod +x teensyduino.64bit
-./teensyduino.64bit
+curl -O https://www.pjrc.com/teensy/td_153/TeensyduinoInstall.linux64
+chmod +x TeensyduinoInstall.linux64
+./TeensyduinoInstall.linux64
 ```
 
 Finally, you will need to set an environment variable to point to the where you 
@@ -139,7 +139,7 @@ We use the `import_arduino_library()` command regardless of if the library is
 an Arduino or a Teensyduino library.
 
 After the build completes, three files should be created for each Teensy target 
-you added: `target.elf`, `target.elf.eep` and  `target.elf.hex`. They should be
+you added: `target.elf`, `target.eep` and  `target.hex`. They should be
 located in the build folder of the catkin workspace:
 `catkin_ws/src/<package_name>/architecture/bin`. Out of those files, the `*.hex`
 file is the one that will get flashed to the micro-controller using your
