@@ -21,54 +21,54 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # Add current directory to CMake Module path automatically
-​
+
 if(EXISTS  ${CMAKE_CURRENT_LIST_DIR}/FindArduino.cmake)
     set(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR})
 endif()
-​
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-​
+
 set(TRIPLE "arm-none-eabi")
 set(TOOLCHAIN_ROOT "/usr")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
-​
+
 # Find arduino sdk from cmake module
 include(FindArduino)
-​
+
 find_file(TEENSY_BASE hardware/teensy/avr ${ARDUINO_SDK_PATH})
 if(NOT EXISTS ${TEENSY_BASE})
     message(FATAL_ERROR "Could not find the teensy SDK under the arduino SDK, make sure teensyduino is properly installed or set $TEENSY_BASE yourself")
 endif()
-​
+
 set(TEENSY_LIB_ROOT "${TEENSY_BASE}/libraries")
 set(TEENSY_CORES_ROOT "${TEENSY_BASE}/cores")# CACHE PATH "Path to the Teensy 'cores' repository")
 set(TEENSY_ROOT "${TEENSY_CORES_ROOT}/teensy3")
 set(ARDUINO_LIB_ROOT "${ARDUINO_SDK_PATH}/libraries")# CACHE PATH "Path to the Arduino library directory")
-​
+
 set(TEENSY_MODEL "MK64FX512" CACHE STRING "Model of the Teensy MCU")
-​
+
 file(READ ${ARDUINO_SDK_PATH}/lib/version.txt ARDUINO_VERSION)
 string(REGEX REPLACE "-.*" "" ARDUINO_VERSION ${ARDUINO_VERSION})
 string(REPLACE "." "" ARDUINO_VERSION ${ARDUINO_VERSION})
-​
+
 file(READ ${TEENSY_BASE}/platform.txt TEENSYDUINO_VERSION)
 string(REGEX MATCH "[\n\r]version=([^\n\r]*)" TEENSYDUINO_VERSION ${TEENSYDUINO_VERSION})
 string(REGEX MATCH "[0-9].*" TEENSYDUINO_VERSION ${TEENSYDUINO_VERSION})
 string(REPLACE "." "" TEENSYDUINO_VERSION ${TEENSYDUINO_VERSION})
-​
+
 set(TEENSY_FREQUENCY "96" CACHE STRING "Frequency of the Teensy MCU (Mhz)")
 set_property(CACHE TEENSY_FREQUENCY PROPERTY STRINGS 96 72 48 24 16 8 4 2)
-​
+
 set(TEENSY_USB_MODE "SERIAL" CACHE STRING "What kind of USB device the Teensy should emulate")
 set_property(CACHE TEENSY_USB_MODE PROPERTY STRINGS SERIAL HID SERIAL_HID MIDI RAWHID FLIGHTSIM)
-​
+
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_CROSSCOMPILING 1)
-​
+
 set(CMAKE_C_COMPILER "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-gcc" CACHE PATH "gcc" FORCE)
 set(CMAKE_CXX_COMPILER "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-g++" CACHE PATH "g++" FORCE)
 set(CMAKE_AR "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-ar" CACHE PATH "archive" FORCE)
@@ -78,25 +78,25 @@ set(CMAKE_OBJCOPY "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-objcopy" CACHE PATH "objcopy"
 set(CMAKE_OBJDUMP "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-objdump" CACHE PATH "objdump" FORCE)
 set(CMAKE_STRIP "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-strip" CACHE PATH "strip" FORCE)
 set(CMAKE_RANLIB "${TOOLCHAIN_ROOT}/bin/${TRIPLE}-ranlib" CACHE PATH "ranlib" FORCE)
-​
+
 include_directories("${TEENSY_ROOT}")
-​
+
 set(TARGET_FLAGS "-mcpu=cortex-m4 -mthumb")
 set(BASE_FLAGS "-Os -Wall -nostdlib -ffunction-sections -fdata-sections ${TARGET_FLAGS}")
-​
+
 set(CMAKE_C_FLAGS "${BASE_FLAGS} -DTIME_T=1421620748" CACHE STRING "c flags") # XXX Generate TIME_T dynamically.
 set(CMAKE_CXX_FLAGS "${BASE_FLAGS} -fno-exceptions -fno-rtti -felide-constructors -std=gnu++0x" CACHE STRING "c++ flags")
-​
+
 set(LINKER_FLAGS "-Os -Wl,--gc-sections ${TARGET_FLAGS} -T${TEENSY_ROOT}/mk64fx512.ld" )
 set(LINKER_LIBS "-lm" )
 set(CMAKE_SHARED_LINKER_FLAGS "${LINKER_FLAGS}" CACHE STRING "linker flags" FORCE)
 set(CMAKE_MODULE_LINKER_FLAGS "${LINKER_FLAGS}" CACHE STRING "linker flags" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "${LINKER_FLAGS}" CACHE STRING "linker flags" FORCE)
-​
+
 # Do not pass flags like '-ffunction-sections -fdata-sections' to the linker.
 # This causes undefined symbol errors when linking.
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET>  <OBJECTS> <LINK_LIBRARIES> ${LINKER_LIBS}" CACHE STRING "Linker command line" FORCE)
-​
+
 add_definitions("-DARDUINO=${ARDUINO_VERSION}")
 add_definitions("-DTEENSYDUINO=${TEENSYDUINO_VERSION}")
 add_definitions("-D__${TEENSY_MODEL}__")
@@ -104,10 +104,10 @@ add_definitions(-DLAYOUT_US_ENGLISH)
 add_definitions(-DUSB_VID=null)
 add_definitions(-DUSB_PID=null)
 add_definitions(-MMD)
-​
+
 FILE(GLOB_RECURSE TEENSY_C_CORE_FILES "${TEENSY_ROOT}/*.c")
 FILE(GLOB_RECURSE TEENSY_CXX_CORE_FILES "${TEENSY_ROOT}/*.cpp")
-​
+
 macro(add_teensy_executable TARGET_NAME)
     # Determine the target flags for this executable.
     set(USB_MODE_DEF)
@@ -129,7 +129,7 @@ macro(add_teensy_executable TARGET_NAME)
     set(TARGET_FLAGS "-D${USB_MODE_DEF} -DF_CPU=${TEENSY_FREQUENCY}000000 ${TEENSY_FLAGS}")
     set(TARGET_C_FLAGS "${TARGET_FLAGS} ${TEENSY_C_FLAGS}")
     set(TARGET_CXX_FLAGS "${TARGET_FLAGS} ${TEENSY_CXX_FLAGS}")
-​
+
     # Build the Teensy 'core' library.
     # Per-target because of preprocessor definitions.
     add_library(${TARGET_NAME}_TeensyCore
@@ -140,7 +140,7 @@ macro(add_teensy_executable TARGET_NAME)
         PROPERTIES COMPILE_FLAGS ${TARGET_C_FLAGS})
     set_source_files_properties(${TEENSY_CXX_CORE_FILES}
         PROPERTIES COMPILE_FLAGS ${TARGET_CXX_FLAGS})
-​
+
     set(FINAL_SOURCES ${TEENSY_LIB_SOURCES})
     foreach(SOURCE ${ARGN})
         get_filename_component(SOURCE_EXT ${SOURCE} EXT)
@@ -162,19 +162,19 @@ macro(add_teensy_executable TARGET_NAME)
                     PATH ${TEMPLATE_FILE_PATH}
                     )
             endif()
-​
+
             configure_file("${TEMPLATE_FILE}" "${GEN_SOURCE}")
             set(FINAL_SOURCES ${FINAL_SOURCES} ${GEN_SOURCE})
         else()
             set(FINAL_SOURCES ${FINAL_SOURCES} ${SOURCE})
         endif()
     endforeach(SOURCE ${ARGN})
-​
+
     # Add the Arduino library directory to the include path if found.
     if(EXISTS ${ARDUINO_LIB_ROOT})
         include_directories(${ARDUINO_LIB_ROOT})
     endif(EXISTS ${ARDUINO_LIB_ROOT})
-​
+
     # Build the ELF executable.
     add_executable(${TARGET_NAME} ${FINAL_SOURCES})
     set_source_files_properties(${FINAL_SOURCES}
@@ -186,7 +186,7 @@ macro(add_teensy_executable TARGET_NAME)
     )
     set(TARGET_OUT_FILE_NAME "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}")
     set(TARGET_ELF "${TARGET_OUT_FILE_NAME}.elf")
-​
+
     # Generate the hex firmware files that can be flashed to the MCU.
     set(EEPROM_OPTS -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0)
     set(HEX_OPTS -O ihex -R .eeprom)
@@ -200,34 +200,34 @@ macro(add_teensy_executable TARGET_NAME)
                       DEPENDS ${TARGET_OUT_FILE_NAME}.eep ${TARGET_OUT_FILE_NAME}.hex)
     add_dependencies(${TARGET_NAME}_Firmware ${TARGET_NAME})
 endmacro(add_teensy_executable)
-​
+
 macro(import_arduino_library LIB_NAME)
     # Check if we can find the library.
-​
+
     if(NOT EXISTS ${ARDUINO_LIB_ROOT})
         message(FATAL_ERROR "Could not find the Arduino library directory")
     endif(NOT EXISTS ${ARDUINO_LIB_ROOT})
     if(NOT EXISTS ${TEENSY_LIB_ROOT})
         message(FATAL_ERROR "Could not find the Teensy library directory")
     endif(NOT EXISTS ${TEENSY_LIB_ROOT})
-​
+
     # Look for library in arduino and teensy root library folders
     set(ARD_LIB_DIR "${ARDUINO_LIB_ROOT}/${LIB_NAME}/src")
     set(TEN_LIB_DIR "${TEENSY_LIB_ROOT}/${LIB_NAME}")
     if(NOT EXISTS "${ARD_LIB_DIR}" AND NOT EXISTS ${TEN_LIB_DIR})
         message(FATAL_ERROR "Could not find the directory for library ${LIB_NAME}")
     endif(NOT EXISTS "${ARD_LIB_DIR}" AND NOT EXISTS ${TEN_LIB_DIR})
-​
+
     # We prioritize the implementation of the library in the teensy cores
     if(EXISTS "${TEN_LIB_DIR}")
         set(LIB_DIR ${TEN_LIB_DIR})
     else()
         set(LIB_DIR ${ARD_LIB_DIR})
     endif(EXISTS "${TEN_LIB_DIR}")
-​
+
     # Add it to the include path.
     include_directories("${LIB_DIR}")
-​
+
     # Mark source files to be built along with the sketch code.
     file(GLOB SOURCES_CPP ABSOLUTE "${LIB_DIR}" "${LIB_DIR}/*.cpp")
     foreach(SOURCE_CPP ${SOURCES_CPP})
@@ -238,7 +238,7 @@ macro(import_arduino_library LIB_NAME)
         set(TEENSY_LIB_SOURCES ${TEENSY_LIB_SOURCES} ${SOURCE_C})
     endforeach(SOURCE_C ${SOURCES_C})
 endmacro(import_arduino_library)
-​
+
 macro(_add_sketch_internal SKETCH_DIR SKETCH)
     set(SKETCH_SOURCE_INO "${SKETCH_DIR}/${SKETCH}/${SKETCH}.ino")
     set(SKETCH_SOURCE_PDE "${SKETCH_DIR}/${SKETCH}/${SKETCH}.pde")
@@ -253,7 +253,7 @@ macro(_add_sketch_internal SKETCH_DIR SKETCH)
         add_teensy_executable(${SKETCH_TARGET_NAME} ${SKETCH_SOURCE_PDE})
     endif()
 endmacro(_add_sketch_internal)
-​
+
 # Create a target for every Arduino sketch file in sub-directories.
 macro(add_sketches)
     set(SKETCH_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -269,7 +269,7 @@ macro(add_sketches)
         endif()
     endforeach()
 endmacro()
-​
+
 # Create a target for the sketch in the current directory.
 macro(add_sketch)
     get_filename_component(SKETCH "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
